@@ -176,6 +176,14 @@ type Ask struct {
 	Stmt
 	Expression Expr
 }
+type AskNum struct {
+	Stmt
+	Expression Expr
+}
+type Lambda struct {
+	Stmt
+	Expression Expr
+}
 func (p *Print) String() string {
 	var sb strings.Builder
 	sb.WriteString("(")

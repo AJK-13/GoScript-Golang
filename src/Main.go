@@ -14,7 +14,7 @@ import (
 	"GoScript/src/semanticerror"
 )
 
-var VERSION = "3.9.8";
+var VERSION = "3.9.9";
 // var Red    = "\033[31m"
 // var Blue   = "\033[34m"
 // var White  = "\033[97m"

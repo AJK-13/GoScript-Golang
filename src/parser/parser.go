@@ -60,10 +60,10 @@ func (p *Parser) classDeclaration() (ast.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	_, err = p.consume(token.COLONEQUAL, "Expected ':=' before '{'")
 	var superclass *ast.Variable
-	if p.match(token.LESS) {
-		_, err = p.consume(token.IDENTIFIER, "Expected superclass name")
+	if p.match(token.IMPLEMENTS) {
+		_, err = p.consume(token.IDENTIFIER, "Expected super class name")
 		if err != nil {
 			return nil, err
 		}
@@ -205,8 +205,8 @@ func (p *Parser) statement() (ast.Stmt, error) {
 		return p.ifStatement()
 	} else if p.match(token.WHILE) {
 		return p.whileStatement()
-	} else if p.match(token.REPEAT) {
-		return p.repeatStatement()
+	} else if p.match(token.FOR) {
+		return p.forStatement()
 	} else if p.match(token.PRINT) {
 		return p.printStatement()
 	} else if p.match(token.PRINTLN) {
@@ -231,10 +231,14 @@ func (p *Parser) askStatement() (ast.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
+	return &ast.Ask{Expression: expr}, nil
+}
+func (p *Parser) askNumStatement() (ast.Stmt, error) {
+	expr, err := p.expression()
 	if err != nil {
 		return nil, err
 	}
-	return &ast.Ask{Expression: expr}, nil
+	return &ast.AskNum{Expression: expr}, nil
 }
 func (p *Parser) breakStatement() (ast.Stmt, error) {
 	if !p.inloop {
@@ -260,7 +264,7 @@ func (p *Parser) continueStatement() (ast.Stmt, error) {
 	return &ast.Continue{Token: tok}, nil
 }
 
-func (p *Parser) repeatStatement() (ast.Stmt, error) {
+func (p *Parser) forStatement() (ast.Stmt, error) {
 	oldInLoop := p.inloop
 	defer p.resetLoop(oldInLoop)
 	p.inloop = true
@@ -291,7 +295,7 @@ func (p *Parser) repeatStatement() (ast.Stmt, error) {
 	}
 	
 	var condition ast.Expr
-	if !p.check(token.SEMICOLON) {
+	if !p.check(token.COLON) {
 		condition, err = p.expression()
 		if err != nil {
 			return nil, err
@@ -709,13 +713,15 @@ func (p *Parser) primary() (ast.Expr, error) {
 		return p.call()
 	} else if p.match(token.ASK) {
 		return p.askStatement()
-	} else if p.match(token.SUPERCLASS) {
+	} else if p.match(token.ASKNUM) {
+		return p.askNumStatement()
+	} else if p.match(token.SUPER) {
 		keyword := p.previous()
 		_, err := p.consume(token.DOT, "Expected '.' after 'super'")
 		if err != nil {
 			return nil, err
 		}
-		method, err := p.consume(token.IDENTIFIER, "Expected superclass method name")
+		method, err := p.consume(token.IDENTIFIER, "Expected super class method name")
 		if err != nil {
 			return nil, err
 		}
@@ -791,7 +797,7 @@ func (p *Parser) synchronize() {
 			return
 		}
 		switch p.peek().Type {
-		case token.CLASS, token.FN, token.VOID, token.FINAL, token.REPEAT, token.IF, token.WHILE, token.PRINT, token.PRINTLN, token.RTN:
+		case token.CLASS, token.FN, token.VOID, token.FINAL, token.FOR, token.IF, token.WHILE, token.PRINT, token.PRINTLN, token.RTN:
 			return
 		}
 		p.advance()

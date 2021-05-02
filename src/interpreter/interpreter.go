@@ -221,6 +221,15 @@ func Eval(node ast.Node, environment *env.Environment, res semantic.Resolution) 
 		fmt.Printf("> %v: ", value)
 		fmt.Scanln(&val)
 		return val, nil
+	case *ast.AskNum:
+		var val float64
+		value, err := Eval(n.Expression, environment, res)
+		if err != nil {
+			return value, err
+		}
+		fmt.Printf("> %v: ", value)
+		fmt.Scanln(&val)
+		return val, nil
 	case *ast.Expression:
 		r, err := Eval(n.Expression, environment, res)
 		if err != nil {
@@ -545,5 +554,5 @@ func checkNumberOperand(operator token.Token, value interface{}, msg string) err
 	case int, float64:
 		return nil
 	}
-	return fmt.Errorf("%v\n[line %v]", msg, operator.Line)
+	return fmt.Errorf("\033[31m[Line \033[97m%v\033[31m]\033[97m: " + msg, operator.Line)
 }
