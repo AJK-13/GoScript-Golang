@@ -3,6 +3,7 @@ package main
 import (
     "fmt"
     "io/ioutil"
+	"bufio"
     "os"
 	"GoScript/src/env"
 	"GoScript/src/interpreter"
@@ -14,14 +15,12 @@ import (
 	"GoScript/src/semanticerror"
 )
 
-var VERSION = "3.9.9";
-// var Red    = "\033[31m"
-// var Blue   = "\033[34m"
-// var White  = "\033[97m"
+var VERSION = "4.0.0";
 
 func check(err error) {
 	if err != nil {
-		panic(err)
+		fmt.Println("\033[31m[Line \033[97m0\033[31m]\033[97m No Such File or Directory")
+		os.Exit(0)
 	}
 }
 
@@ -52,13 +51,33 @@ func run(src string, env *env.Environment) {
 	}
 	interpreter.Interpret(statements, env, resolution)
 }
+func runPrompt() {
+	reader := bufio.NewReader(os.Stdin)
+	env := interpreter.GlobalEnv
+	for {
+		fmt.Print("> ")
+		dat, err := reader.ReadBytes('\n')
+		if err != nil {
+			fmt.Errorf("\033[31m[Line \033[97m%v\033[31m]\033[97m File Not Found", 0)
+		}
+		run(string(dat), env)
+		parseerror.HadError = false
+		runtimeerror.HadError = false
+		semanticerror.HadError = false
+	}
+}
+
 func main() {
-	if os.Args[1] == "-v" {
-		fmt.Println("\033[34m\nGoScript: \033[97mv" + VERSION)
-		os.Exit(0)
-	} else if os.Args[1] == "-t" {
-		runFile("src/Test/Test.gs")
-	} else if len(os.Args) == 1 {
-		runFile(os.Args[1])
+	if len(os.Args) > 1 {
+		if os.Args[1] == "-t" {
+			runFile("src/Test/Test.gs")
+		} else if os.Args[1] == "-v" {
+			fmt.Println("\033[34m\nGoScript: \033[97mv" + VERSION)
+			os.Exit(0)
+		} else {
+			runFile(os.Args[1])
+		}
+	} else {
+		runPrompt()
 	}
 }
