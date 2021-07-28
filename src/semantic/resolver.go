@@ -1,16 +1,13 @@
 package semantic
 
 import (
-	"fmt"
 	"GoScript/src/ast"
 	"GoScript/src/semanticerror"
 	"GoScript/src/token"
+	"fmt"
 )
 
-
-type Unused = map[ast.Stmt]bool 
-
-
+type Unused = map[ast.Stmt]bool
 
 type EnvSize = map[ast.Stmt]int
 
@@ -26,7 +23,6 @@ type vInfo struct {
 	stmt   ast.Stmt
 }
 
-
 type rScope = []vInfo
 
 func scopeLookup(name string, scope rScope) int {
@@ -38,16 +34,13 @@ func scopeLookup(name string, scope rScope) int {
 	return -1
 }
 
-
 type Resolution struct {
 	Unused Unused
 }
 
-
 func NewResolution() Resolution {
 	return Resolution{Unused: make(Unused)}
 }
-
 
 func Resolve(statements []ast.Stmt) (Resolution, error) {
 	resolution := NewResolution()
@@ -69,7 +62,6 @@ const (
 	ctClass    = iota
 	ctSubClass = iota
 )
-
 
 type Resolver struct {
 	scopes          []rScope
@@ -247,7 +239,7 @@ func (r *Resolver) resolve(node ast.Node, res Resolution) error {
 
 			top := r.scopes[len(r.scopes)-1]
 			top = append(top, vInfo{name: "super", status: vDefined, isUsed: true})
-			r.scopes[len(r.scopes)-1] = top 
+			r.scopes[len(r.scopes)-1] = top
 		}
 
 		for _, classmethod := range n.ClassMethods {
@@ -261,7 +253,7 @@ func (r *Resolver) resolve(node ast.Node, res Resolution) error {
 
 		top := r.scopes[len(r.scopes)-1]
 		top = append(top, vInfo{name: "this", status: vDefined, isUsed: true})
-		r.scopes[len(r.scopes)-1] = top 
+		r.scopes[len(r.scopes)-1] = top
 
 		for _, method := range n.Methods {
 			declaration := ftMethod
@@ -358,7 +350,7 @@ func (r *Resolver) popScope(stmt ast.Stmt, res Resolution) {
 	top := r.scopes[len(r.scopes)-1]
 	r.scopes = r.scopes[:len(r.scopes)-1]
 	for _, info := range top {
-		
+
 		if !info.isUsed && info.stmt != nil {
 			res.Unused[info.stmt] = true
 		}
@@ -370,7 +362,6 @@ func (r *Resolver) popScope(stmt ast.Stmt, res Resolution) {
 		function.EnvSize = len(top)
 	}
 }
-
 
 func (r *Resolver) declare(name token.Token, node ast.Node) (int, error) {
 	if len(r.scopes) != 0 {

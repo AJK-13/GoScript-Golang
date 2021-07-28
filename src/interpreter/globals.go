@@ -1,4 +1,3 @@
-  
 package interpreter
 
 import (
@@ -8,6 +7,7 @@ import (
 
 var GlobalEnv = env.NewGlobal()
 var globals = GlobalEnv
+
 func check(err error) {
 	if err != nil {
 		panic(err)

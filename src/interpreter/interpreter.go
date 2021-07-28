@@ -1,12 +1,12 @@
 package interpreter
 
 import (
-	"fmt"
 	"GoScript/src/ast"
 	"GoScript/src/env"
 	"GoScript/src/runtimeerror"
 	"GoScript/src/semantic"
 	"GoScript/src/token"
+	"fmt"
 	"io"
 	"math"
 	"os"
@@ -17,30 +17,24 @@ const (
 	operandsMustBeTwoNumbersOrTwoStrings = "Operands must be two numbers or two strings"
 )
 
-
 type Options struct {
 	Writer io.Writer
 }
 
 var options = &Options{Writer: os.Stdout}
 
-
 type returnError struct {
 	error
 	value interface{}
 }
 
-
 type breakError struct {
 	error
 }
 
-
 type continueError struct {
 	error
 }
-
-
 
 func Interpret(statements []ast.Stmt, env *env.Environment, res semantic.Resolution) {
 	OldGlobalEnv := GlobalEnv
@@ -53,7 +47,6 @@ func Interpret(statements []ast.Stmt, env *env.Environment, res semantic.Resolut
 	}
 	GlobalEnv = OldGlobalEnv
 }
-
 
 func Eval(node ast.Node, environment *env.Environment, res semantic.Resolution) (interface{}, error) {
 	switch n := node.(type) {
@@ -218,7 +211,7 @@ func Eval(node ast.Node, environment *env.Environment, res semantic.Resolution) 
 		if err != nil {
 			return value, err
 		}
-		fmt.Printf("> %v: ", value)
+		fmt.Printf("> %v ", value)
 		fmt.Scanln(&val)
 		return val, nil
 	case *ast.AskNum:
@@ -227,7 +220,7 @@ func Eval(node ast.Node, environment *env.Environment, res semantic.Resolution) 
 		if err != nil {
 			return value, err
 		}
-		fmt.Printf("> %v: ", value)
+		fmt.Printf("> %v ", value)
 		fmt.Scanln(&val)
 		return val, nil
 	case *ast.Expression:
@@ -243,6 +236,15 @@ func Eval(node ast.Node, environment *env.Environment, res semantic.Resolution) 
 				return nil, err
 			}
 			environment.Define(n.Name.Lexeme, value, n.EnvIndex, "void")
+		} else {
+			environment.DefineUnitialized(n.Name.Lexeme, n.EnvIndex)
+		}
+		return nil, nil
+	case *ast.Iden:
+		if n.Initializer != int(math.NaN()) {
+			a, _ := environment.Get(n.Name, n.EnvIndex)
+			t := a.(float64)
+			environment.Define(n.Name.Lexeme, t+float64(n.Initializer), n.EnvIndex, "void")
 		} else {
 			environment.DefineUnitialized(n.Name.Lexeme, n.EnvIndex)
 		}
@@ -539,7 +541,7 @@ func isTruthy(val interface{}) bool {
 }
 
 func isEqual(left interface{}, right interface{}) bool {
-	
+
 	if left == nil && right == nil {
 		return true
 	}
@@ -554,5 +556,5 @@ func checkNumberOperand(operator token.Token, value interface{}, msg string) err
 	case int, float64:
 		return nil
 	}
-	return fmt.Errorf("\033[31m[Line \033[97m%v\033[31m]\033[97m: " + msg, operator.Line)
+	return fmt.Errorf("\033[31m[Line \033[97m%v\033[31m]\033[97m: "+msg, operator.Line)
 }

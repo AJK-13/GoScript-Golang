@@ -4,25 +4,22 @@ import (
 	"GoScript/src/ast"
 	"GoScript/src/parseerror"
 	"GoScript/src/token"
-	// "fmt"
 )
 
 type Parser struct {
 	tokens  []token.Token
 	current int
-	inloop  bool 
+	inloop  bool
 }
-
 
 func New(tokens []token.Token) Parser {
 	return Parser{tokens, 0, false}
 }
 
-
 func (p *Parser) Parse() []ast.Stmt {
 	statements := make([]ast.Stmt, 0)
 	for !p.isAtEnd() {
-		
+
 		statements = append(statements, p.declaration())
 	}
 	return statements
@@ -54,13 +51,13 @@ func (p *Parser) declaration() ast.Stmt {
 	}
 	return stmt
 }
-
 func (p *Parser) classDeclaration() (ast.Stmt, error) {
 	name, err := p.consume(token.IDENTIFIER, "Expected class name")
 	if err != nil {
 		return nil, err
 	}
 	_, err = p.consume(token.COLONEQUAL, "Expected ':=' before '{'")
+	_ = err
 	var superclass *ast.Variable
 	if p.match(token.IMPLEMENTS) {
 		_, err = p.consume(token.IDENTIFIER, "Expected super class name")
@@ -198,8 +195,6 @@ func (p *Parser) finalDeclaration() (ast.Stmt, error) {
 	return &ast.Final{Name: name, Initializer: initializer, EnvIndex: -1}, nil
 }
 
-
-
 func (p *Parser) statement() (ast.Stmt, error) {
 	if p.match(token.IF) {
 		return p.ifStatement()
@@ -273,7 +268,6 @@ func (p *Parser) forStatement() (ast.Stmt, error) {
 		return nil, err
 	}
 
-	
 	var initializer ast.Stmt
 	if p.match(token.SEMICOLON) {
 		initializer = nil
@@ -293,7 +287,7 @@ func (p *Parser) forStatement() (ast.Stmt, error) {
 			return nil, err
 		}
 	}
-	
+
 	var condition ast.Expr
 	if !p.check(token.COLON) {
 		condition, err = p.expression()
@@ -305,7 +299,7 @@ func (p *Parser) forStatement() (ast.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var increment ast.Expr
 	if !p.check(token.RIGHTPAREN) {
 		increment, err = p.expression()
@@ -313,12 +307,11 @@ func (p *Parser) forStatement() (ast.Stmt, error) {
 			return nil, err
 		}
 	}
-
 	_, err = p.consume(token.RIGHTPAREN, "Expected ')' after for clauses")
 	if err != nil {
 		return nil, err
 	}
-	
+
 	body, err := p.statement()
 	if err != nil {
 		return nil, err
@@ -384,7 +377,7 @@ func (p *Parser) block() ([]ast.Stmt, error) {
 	for !p.check(token.RIGHTBRACE) && !p.isAtEnd() {
 		stmt := p.declaration()
 		if stmt == nil {
-			return nil, nil 
+			return nil, nil
 		}
 		statements = append(statements, stmt)
 	}
@@ -679,7 +672,7 @@ func (p *Parser) finishCall(callee ast.Expr) (ast.Expr, error) {
 	args := make([]ast.Expr, 0)
 	if !p.check(token.RIGHTPAREN) {
 		for {
-			arg, err := p.assignment() 
+			arg, err := p.assignment()
 			if err != nil {
 				return nil, err
 			}
@@ -739,7 +732,25 @@ func (p *Parser) primary() (ast.Expr, error) {
 		}
 		return &ast.Grouping{Expression: expr}, nil
 	} else if p.match(token.IDENTIFIER) {
-		return &ast.Variable{Name: p.previous(), EnvIndex: -1, EnvDepth: -1}, nil
+		name := p.previous()
+		p.consume(token.IDENTIFIER, "Expected an identifier")
+		expr := &ast.Variable{Name: name, EnvIndex: -1, EnvDepth: -1}
+		if p.match(token.PLUSPLUS) {
+			name := p.previous2()
+			var initializer = 1
+			p.consume(token.PLUSPLUS, "Expected '++' after variable")
+			expr := &ast.Iden{Name: name, Initializer: initializer, EnvIndex: -1}
+			return expr, nil
+		} else if p.match(token.MINUSMINUS) {
+			name := p.previous2()
+			var initializer = -1
+			p.consume(token.MINUSMINUS, "Expected '--' after variable")
+			expr := &ast.Iden{Name: name, Initializer: initializer, EnvIndex: -1}
+			return expr, nil
+		} else {
+			expr = &ast.Variable{Name: name, EnvIndex: -1, EnvDepth: -1}
+		}
+		return expr, nil
 	}
 	return nil, parseerror.MakeError(p.peek(), "Expected expression")
 }
@@ -768,7 +779,6 @@ func (p *Parser) match(types ...token.Type) bool {
 	return false
 }
 
-
 func (p *Parser) check(tp token.Type) bool {
 	if p.isAtEnd() {
 		return false
@@ -780,14 +790,16 @@ func (p *Parser) isAtEnd() bool {
 	return p.peek().Type == token.EOF
 }
 
-
 func (p *Parser) peek() token.Token {
 	return p.tokens[p.current]
 }
 
-
 func (p *Parser) previous() token.Token {
 	return p.tokens[p.current-1]
+}
+
+func (p *Parser) previous2() token.Token {
+	return p.tokens[p.current-2]
 }
 
 func (p *Parser) synchronize() {

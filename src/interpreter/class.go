@@ -1,22 +1,19 @@
 package interpreter
 
 import (
-	"fmt"
 	"GoScript/src/runtimeerror"
 	"GoScript/src/token"
+	"fmt"
 )
-
 
 type MetaClass struct {
 	Methods map[string]*UserFunction
 }
 
-
 type PropertyAccessor interface {
 	Get(name token.Token) (interface{}, error)
 	Set(name token.Token, value interface{}) (interface{}, error)
 }
-
 
 type Class struct {
 	Callable
@@ -28,7 +25,6 @@ type Class struct {
 	Fields     map[string]interface{}
 }
 
-
 func (c *Class) FindMethod(name token.Token) (*UserFunction, error) {
 	if m, prs := c.Methods[name.Lexeme]; prs {
 		return m, nil
@@ -38,11 +34,9 @@ func (c *Class) FindMethod(name token.Token) (*UserFunction, error) {
 	return nil, runtimeerror.Make(name, fmt.Sprintf("Undefined property '%s'", name.Lexeme))
 }
 
-
 func (c *Class) String() string {
 	return fmt.Sprintf("<class %s>", c.Name)
 }
-
 
 func (c *Class) Get(name token.Token) (interface{}, error) {
 	if v, prs := c.Fields[name.Lexeme]; prs {
@@ -54,12 +48,10 @@ func (c *Class) Get(name token.Token) (interface{}, error) {
 	return nil, runtimeerror.Make(name, fmt.Sprintf("Undefined property '%s'", name.Lexeme))
 }
 
-
 func (c *Class) Set(name token.Token, value interface{}) (interface{}, error) {
 	c.Fields[name.Lexeme] = value
 	return nil, nil
 }
-
 
 func (c *Class) Call(arguments []interface{}) (interface{}, error) {
 	instance := &ClassInstance{Class: c, fields: make(map[string]interface{})}
@@ -73,15 +65,12 @@ func (c *Class) Call(arguments []interface{}) (interface{}, error) {
 	return instance, nil
 }
 
-
-
 func (c *Class) Arity() int {
 	if initializer, prs := c.Methods["init"]; prs {
 		return initializer.Arity()
 	}
 	return 0
 }
-
 
 type ClassInstance struct {
 	PropertyAccessor
@@ -92,7 +81,6 @@ type ClassInstance struct {
 func (c *ClassInstance) String() string {
 	return fmt.Sprintf("<class-instance %s>", c.Class.Name)
 }
-
 
 func (c *ClassInstance) Get(name token.Token) (interface{}, error) {
 	if v, prs := c.fields[name.Lexeme]; prs {
@@ -110,7 +98,6 @@ func (c *ClassInstance) Get(name token.Token) (interface{}, error) {
 	}
 	return m.Bind(c), nil
 }
-
 
 func (c *ClassInstance) Set(name token.Token, value interface{}) (interface{}, error) {
 	c.fields[name.Lexeme] = value

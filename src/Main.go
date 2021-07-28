@@ -1,10 +1,6 @@
 package main
 
 import (
-    "fmt"
-    "io/ioutil"
-	"bufio"
-    "os"
 	"GoScript/src/env"
 	"GoScript/src/interpreter"
 	"GoScript/src/parseerror"
@@ -13,9 +9,13 @@ import (
 	"GoScript/src/scanner"
 	"GoScript/src/semantic"
 	"GoScript/src/semanticerror"
+	"bufio"
+	"fmt"
+	"io/ioutil"
+	"os"
 )
 
-var VERSION = "4.0.0";
+var VERSION = "4.0.0"
 
 func check(err error) {
 	if err != nil {

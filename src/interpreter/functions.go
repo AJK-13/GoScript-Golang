@@ -1,21 +1,19 @@
 package interpreter
 
 import (
-	"fmt"
 	"GoScript/src/ast"
 	"GoScript/src/env"
 	"GoScript/src/semantic"
 	"GoScript/src/token"
+	"fmt"
 )
 
 type loxCallable func([]interface{}) (interface{}, error)
-
 
 type Callable interface {
 	Arity() int
 	Call([]interface{}) (interface{}, error)
 }
-
 
 type NativeFunction struct {
 	Callable
@@ -23,21 +21,17 @@ type NativeFunction struct {
 	arity      int
 }
 
-
 func (n *NativeFunction) Call(arguments []interface{}) (interface{}, error) {
 	return n.nativeCall(arguments)
 }
-
 
 func (n *NativeFunction) Arity() int {
 	return n.arity
 }
 
-
 func (n *NativeFunction) String() string {
 	return fmt.Sprintf("<native/%p>", n.nativeCall)
 }
-
 
 type UserFunction struct {
 	Callable
@@ -48,11 +42,9 @@ type UserFunction struct {
 	envSize       int
 }
 
-
 func NewUserFunction(def *ast.Function, closure *env.Environment, res semantic.Resolution, envSize int) *UserFunction {
 	return &UserFunction{Definition: def, Closure: closure, Resolution: res, envSize: envSize, IsInitializer: false}
 }
-
 
 func (u *UserFunction) Call(arguments []interface{}) (interface{}, error) {
 	env := env.NewSized(u.Closure, u.envSize)
@@ -83,16 +75,13 @@ func (u *UserFunction) Call(arguments []interface{}) (interface{}, error) {
 	return nil, nil
 }
 
-
 func (u *UserFunction) Arity() int {
 	return len(u.Definition.Params)
 }
 
-
 func (u *UserFunction) String() string {
 	return u.Definition.Name.Lexeme
 }
-
 
 func (u *UserFunction) Bind(instance *ClassInstance) *UserFunction {
 	thisEnv := env.NewSized(u.Closure, 1)

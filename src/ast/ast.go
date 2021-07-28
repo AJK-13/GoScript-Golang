@@ -1,8 +1,8 @@
 package ast
 
 import (
-	"fmt"
 	"GoScript/src/token"
+	"fmt"
 	"strings"
 )
 
@@ -82,7 +82,6 @@ type Ternary struct {
 	Else      Expr
 }
 
-
 func (t *Ternary) String() string {
 	var sb strings.Builder
 	sb.WriteString("(")
@@ -125,6 +124,7 @@ type Variable struct {
 	EnvIndex int
 	EnvDepth int
 }
+
 func (v *Variable) String() string {
 	var sb strings.Builder
 	sb.WriteString(v.Name.Lexeme)
@@ -184,6 +184,7 @@ type Lambda struct {
 	Stmt
 	Expression Expr
 }
+
 func (p *Print) String() string {
 	var sb strings.Builder
 	sb.WriteString("(")
@@ -210,6 +211,14 @@ type Var struct {
 	Initializer Expr
 	EnvIndex    int
 }
+
+type Iden struct {
+	Stmt
+	Name        token.Token
+	Initializer int
+	EnvIndex    int
+}
+
 type Final struct {
 	Stmt
 	Name        token.Token

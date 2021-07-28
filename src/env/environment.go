@@ -1,10 +1,10 @@
 package env
 
 import (
-	"fmt"
-	"os"
 	"GoScript/src/runtimeerror"
 	"GoScript/src/token"
+	"fmt"
+	"os"
 )
 
 type uninitialized struct{}
@@ -17,21 +17,17 @@ type Environment struct {
 	indexedValues []interface{}
 }
 
-
 func New(env *Environment) *Environment {
 	return NewSized(env, 0)
 }
-
 
 func NewSized(env *Environment, size int) *Environment {
 	return &Environment{values: make(map[string]interface{}), enclosing: env, indexedValues: make([]interface{}, size)}
 }
 
-
 func NewGlobal() *Environment {
 	return New(nil)
 }
-
 
 func (e *Environment) Define(name string, value interface{}, index int, mut string) {
 	if e.values[name] == nil {
@@ -54,7 +50,6 @@ func (e *Environment) Define(name string, value interface{}, index int, mut stri
 	}
 }
 
-
 func (e *Environment) DefineUnitialized(name string, index int) {
 	if index == -1 {
 		e.values[name] = needsInitialization
@@ -62,7 +57,6 @@ func (e *Environment) DefineUnitialized(name string, index int) {
 		e.indexedValues[index] = needsInitialization
 	}
 }
-
 
 func (e *Environment) Get(name token.Token, index int) (interface{}, error) {
 	if index == -1 {
@@ -81,11 +75,9 @@ func (e *Environment) Get(name token.Token, index int) (interface{}, error) {
 	return e.indexedValues[index], nil
 }
 
-
 func (e *Environment) GetAt(distance int, name token.Token, index int) (interface{}, error) {
 	return e.Ancestor(distance).Get(name, index)
 }
-
 
 func (e *Environment) Ancestor(distance int) *Environment {
 	env := e
@@ -94,7 +86,6 @@ func (e *Environment) Ancestor(distance int) *Environment {
 	}
 	return env
 }
-
 
 func (e *Environment) Assign(name token.Token, index int, value interface{}) error {
 	if index == -1 {
@@ -110,7 +101,6 @@ func (e *Environment) Assign(name token.Token, index int, value interface{}) err
 	e.indexedValues[index] = value
 	return nil
 }
-
 
 func (e *Environment) AssignAt(distance int, index int, name token.Token, value interface{}) error {
 	return e.Ancestor(distance).Assign(name, index, value)

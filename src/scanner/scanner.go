@@ -1,38 +1,37 @@
 package scanner
 
 import (
-	"fmt"
 	"GoScript/src/parseerror"
 	"GoScript/src/token"
+	"fmt"
 	"strconv"
 )
 
 var keywords = map[string]token.Type{
-	"void":      token.VOID,
+	"void":       token.VOID,
 	"final":      token.FINAL,
-	"class":    token.CLASS,
-	"el":     token.EL,
-	"false":    token.FALSE,
-	"for":      token.FOR,
-	"fn":      token.FN,
-	"if":       token.IF,
-	"nil":      token.NIL,
-	"print":    token.PRINT,
-	"println":      token.PRINTLN,
-	"rtn":   token.RTN,
-	"super":    token.SUPER,
+	"class":      token.CLASS,
+	"el":         token.EL,
+	"false":      token.FALSE,
+	"for":        token.FOR,
+	"fn":         token.FN,
+	"if":         token.IF,
+	"nil":        token.NIL,
+	"Print":      token.PRINT,
+	"Println":    token.PRINTLN,
+	"rtn":        token.RTN,
+	"super":      token.SUPER,
 	"implements": token.IMPLEMENTS,
-	"this":     token.THIS,
-	"true":     token.TRUE,
-	"ask":      token.ASK,
-	"askNum":      token.ASKNUM,
-	"while":    token.WHILE,
-	"break":    token.BREAK,
-	"lambda":   token.LAMBDA,
-	"include":  token.INCLUDE,
-	"continue": token.CONTINUE,
+	"this":       token.THIS,
+	"true":       token.TRUE,
+	"Ask":        token.ASK,
+	"AskNum":     token.ASKNUM,
+	"while":      token.WHILE,
+	"break":      token.BREAK,
+	"lambda":     token.LAMBDA,
+	"Include":    token.INCLUDE,
+	"continue":   token.CONTINUE,
 }
-
 
 type Scanner struct {
 	source  string
@@ -42,17 +41,14 @@ type Scanner struct {
 	tokens  []token.Token
 }
 
-
 func New(source string) Scanner {
 	scanner := Scanner{source: source, line: 1, tokens: make([]token.Token, 0)}
 	return scanner
 }
 
-
-
 func (sc *Scanner) ScanTokens() []token.Token {
 	for !sc.isAtEnd() {
-		
+
 		sc.start = sc.current
 		sc.scanToken()
 	}
@@ -82,16 +78,13 @@ func (sc *Scanner) scanString() {
 		sc.advance()
 	}
 
-	
 	if sc.isAtEnd() {
 		parseerror.LogMessage(sc.line, "Unterminated string")
 		return
 	}
 
-	
 	sc.advance()
 
-	
 	value := sc.source[sc.start+1 : sc.current-1]
 	sc.addTokenWithLiteral(token.STRING, value)
 }
@@ -101,9 +94,8 @@ func (sc *Scanner) scanNumber() {
 		sc.advance()
 	}
 
-	
 	if sc.peek() == '.' && sc.isDigit(sc.peekNext()) {
-		sc.advance() 
+		sc.advance()
 		for sc.isDigit(sc.peek()) {
 			sc.advance()
 		}
@@ -122,7 +114,6 @@ func (sc *Scanner) scanIdentifier() {
 		sc.advance()
 	}
 
-	
 	text := sc.source[sc.start:sc.current]
 	tp, ok := keywords[text]
 	if ok {
@@ -149,9 +140,21 @@ func (sc *Scanner) scanToken() {
 	case '.':
 		sc.addToken(token.DOT)
 	case '-':
-		sc.addToken(token.MINUS)
+		if sc.match('=') {
+			sc.addToken(token.MINUSEQUAL)
+		} else if sc.match('-') {
+			sc.addToken(token.MINUSMINUS)
+		} else {
+			sc.addToken(token.MINUS)
+		}
 	case '+':
-		sc.addToken(token.PLUS)
+		if sc.match('=') {
+			sc.addToken(token.PLUSEQUAL)
+		} else if sc.match('+') {
+			sc.addToken(token.PLUSPLUS)
+		} else {
+			sc.addToken(token.PLUS)
+		}
 	case '?':
 		sc.addToken(token.QMARK)
 	case ':':
@@ -165,7 +168,11 @@ func (sc *Scanner) scanToken() {
 	case '^':
 		sc.addToken(token.POWER)
 	case '*':
-		sc.addToken(token.STAR)
+		if sc.match('=') {
+			sc.addToken(token.TIMESEQUAL)
+		} else {
+			sc.addToken(token.STAR)
+		}
 	case '!':
 		if sc.match('=') {
 			sc.addToken(token.BANGEQUAL)
@@ -173,11 +180,11 @@ func (sc *Scanner) scanToken() {
 			for sc.peek() != '\n' && !sc.isAtEnd() {
 				sc.advance()
 			}
- 		} else if sc.match('*') {
-			for sc.peek() != '*' && sc.peek() + 1 != '!' && !sc.isAtEnd() {
+		} else if sc.match('*') {
+			for sc.peek() != '*' && sc.peek()+1 != '!' && !sc.isAtEnd() {
 				sc.advance()
 			}
- 		} else {
+		} else {
 			sc.addToken(token.BANG)
 		}
 	case '=':
@@ -198,12 +205,20 @@ func (sc *Scanner) scanToken() {
 		} else {
 			sc.addToken(token.GREATER)
 		}
+	case '|':
+		sc.addToken(token.OR)
+	case '&':
+		sc.addToken(token.AND)
 	case '/':
-		sc.addToken(token.SLASH)
+		if sc.match('=') {
+			sc.addToken(token.DIVIDEEQUAL)
+		} else {
+			sc.addToken(token.SLASH)
+		}
 	case '\n':
 		sc.line++
 	case ' ', '\r', '\t':
-		
+
 	case '"':
 		sc.scanString()
 	default:
@@ -234,7 +249,6 @@ func (sc *Scanner) isAlphaNumeric(c byte) bool {
 func (sc *Scanner) isAtEnd() bool {
 	return sc.current >= len(sc.source)
 }
-
 
 func (sc *Scanner) advance() byte {
 	sc.current++
